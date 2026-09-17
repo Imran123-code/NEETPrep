@@ -1,12 +1,12 @@
 // Master NEET Question Bank Registry & Service Engine
 // Aggregates Physics, Chemistry, and Biology questions with deduplication & advanced querying
 
-import { physicsClass11Questions } from './physics/class11';
-import { physicsClass12Questions } from './physics/class12';
-import { chemistryClass11Questions } from './chemistry/class11';
-import { chemistryClass12Questions } from './chemistry/class12';
-import { biologyClass11Questions } from './biology/class11';
-import { biologyClass12Questions } from './biology/class12';
+import { physicsClass11Questions } from './physics/class11.js';
+import { physicsClass12Questions } from './physics/class12.js';
+import { chemistryClass11Questions } from './chemistry/class11.js';
+import { chemistryClass12Questions } from './chemistry/class12.js';
+import { biologyClass11Questions } from './biology/class11.js';
+import { biologyClass12Questions } from './biology/class12.js';
 
 // Duplicate detection and normalization utility
 export const normalizeText = (str) => {

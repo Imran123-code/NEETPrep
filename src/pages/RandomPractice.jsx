@@ -25,8 +25,11 @@ export default function RandomPractice() {
   // Preset or custom config from state
   const stateTopics = location.state?.customTopics;
   const stateTitle = location.state?.title;
+  const stateQuestions = location.state?.customQuestions;
 
-  const [questionCount, setQuestionCount] = useState(10);
+  const [questionCount, setQuestionCount] = useState(
+    stateQuestions?.length ? Math.min(stateQuestions.length, 25) : 10
+  );
   const [selectedSubject, setSelectedSubject] = useState('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
   const [selectedClass, setSelectedClass] = useState('All');
@@ -39,7 +42,9 @@ export default function RandomPractice() {
 
   const startPractice = (count = questionCount) => {
     let generated = [];
-    if (stateTopics && stateTopics.length > 0) {
+    if (stateQuestions && stateQuestions.length > 0) {
+      generated = stateQuestions.slice(0, count);
+    } else if (stateTopics && stateTopics.length > 0) {
       generated = getWeakTopicQuestions(stateTopics, count);
     } else {
       generated = getRandomQuestions({

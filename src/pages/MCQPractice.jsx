@@ -1,17 +1,34 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { getMCQsByChapter, getMCQsBySubject } from '../data/mcqs';
 import { subjectColors } from '../data/syllabus';
 import { getChapterById } from '../data/chapters';
 import { useProgress } from '../context/ProgressContext';
 import { ProgressBar } from '../components/ui/ProgressBar';
-import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, CheckCircle, XCircle, Flag, SkipForward } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, CheckCircle, XCircle, Flag, SkipForward, Clock, CheckSquare } from 'lucide-react';
 
 const diffColors = { Easy: 'badge-easy', Medium: 'badge-medium', Hard: 'badge-hard' };
 
+function PracticeTimer() {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono font-semibold">
+      <Clock className="w-3.5 h-3.5 text-blue-500" />
+      <span>{String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}</span>
+    </div>
+  );
+}
+
 export default function MCQPractice() {
   const { chapterId } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { recordMCQAttempt, toggleBookmark, progress } = useProgress();
 
@@ -69,29 +86,39 @@ export default function MCQPractice() {
     recordMCQAttempt(q.id, correct);
   };
 
+  const handleFinish = () => {
+    const score = Object.values(answers).filter(a => a.correct).length;
+    const correct = score;
+    const attemptedCount = Object.keys(answers).length;
+    const incorrect = Object.values(answers).filter(a => !a.correct && !a.skipped).length;
+    const unattempted = questions.length - attemptedCount;
+    const result = {
+      id: Date.now().toString(),
+      chapterId,
+      chapterName,
+      subject,
+      mode: 'practice',
+      score,
+      total: questions.length,
+      correct,
+      incorrect,
+      unattempted,
+      percentage: Math.round((score / questions.length) * 100),
+      date: new Date().toISOString(),
+      answers: Object.fromEntries(questions.map((q, i) => [q.id, answers[i]])),
+      questions,
+    };
+    localStorage.setItem(`result_${result.id}`, JSON.stringify(result));
+    navigate(`/result/${result.id}`);
+  };
+
   const handleNext = () => {
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(i => i + 1);
       setSelectedAnswer(null);
       setShowExplanation(false);
     } else {
-      // Calculate result
-      const score = Object.values(answers).filter(a => a.correct).length;
-      const result = {
-        id: Date.now().toString(),
-        chapterId,
-        chapterName,
-        subject,
-        mode: 'practice',
-        score,
-        total: questions.length,
-        percentage: Math.round((score / questions.length) * 100),
-        date: new Date().toISOString(),
-        answers: Object.fromEntries(questions.map((q, i) => [q.id, answers[i]])),
-        questions,
-      };
-      localStorage.setItem(`result_${result.id}`, JSON.stringify(result));
-      navigate(`/result/${result.id}`);
+      handleFinish();
     }
   };
 
@@ -103,49 +130,109 @@ export default function MCQPractice() {
   const pct = Math.round(((currentIdx + 1) / questions.length) * 100);
 
   return (
-    <div className="page-enter max-w-3xl mx-auto px-4 sm:px-6 py-8">
+    <div className="page-enter max-w-4xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <Link to={`/chapter/${chapterId}`} className="text-sm text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1">
             <ChevronLeft className="w-4 h-4" /> {chapterName}
           </Link>
           <h1 className="text-xl font-bold font-display text-slate-900 dark:text-white mt-0.5">MCQ Practice</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-500">{currentIdx + 1}/{questions.length}</span>
+        <div className="flex items-center gap-3">
+          <PracticeTimer />
+          <span className="text-sm font-semibold text-slate-500">{currentIdx + 1} of {questions.length}</span>
+          <button
+            onClick={handleFinish}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors"
+          >
+            <CheckSquare className="w-3.5 h-3.5" /> Submit Practice
+          </button>
         </div>
       </div>
 
-      {/* Progress */}
-      <div className="mb-6">
-        <ProgressBar value={pct} color={subject === 'Physics' ? 'blue' : subject === 'Chemistry' ? 'emerald' : 'violet'} className="h-2.5" />
-      </div>
-
-      {/* Question Navigator */}
-      <div className="flex gap-1.5 mb-6 flex-wrap">
-        {questions.map((_, i) => {
-          const ans = answers[i];
+      {/* Preset Modes */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 text-xs">
+        <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Presets:</span>
+        {[10, 25, 50, 'all'].map(cnt => {
+          const active = (countParam === String(cnt)) || (!countParam && cnt === 10 && rawQuestions.length >= 10);
           return (
             <button
-              key={i}
-              onClick={() => { setCurrentIdx(i); setSelectedAnswer(answers[i]?.selected ?? null); setShowExplanation(!!answers[i]); }}
-              className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all duration-150 ${
-                i === currentIdx ? 'ring-2 ring-offset-1'
-                : ''
-              } ${
-                ans?.correct ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                : ans && !ans.skipped ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                : ans?.skipped ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                : markedForReview.has(i) ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+              key={cnt}
+              onClick={() => {
+                setSearchParams({ count: String(cnt) });
+                setCurrentIdx(0);
+                setSelectedAnswer(null);
+                setShowExplanation(false);
+                setAnswers({});
+              }}
+              className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                active
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
-              style={i === currentIdx ? { ringColor: colors.primary } : {}}
             >
-              {i + 1}
+              {cnt === 'all' ? 'Practice All' : `Practice ${cnt}`}
             </button>
           );
         })}
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mb-5">
+        <ProgressBar value={pct} color={subject === 'Physics' ? 'blue' : subject === 'Chemistry' ? 'emerald' : 'violet'} className="h-2" />
+      </div>
+
+      {/* Question Navigator Palette */}
+      <div className="card p-3.5 mb-5 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+        <div className="flex items-center justify-between mb-2 text-xs font-semibold text-slate-500">
+          <span>Question Navigator Palette</span>
+          <div className="flex items-center gap-3 text-[11px]">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Answered</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" /> Not Answered</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-violet-500" /> Marked</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full ring-2 ring-blue-500" /> Current</span>
+          </div>
+        </div>
+
+        <div className="flex gap-1.5 flex-wrap max-h-32 overflow-y-auto pt-1">
+          {questions.map((_, i) => {
+            const ans = answers[i];
+            const isCurr = i === currentIdx;
+            const isMarked = markedForReview.has(i);
+            const isAnswered = ans && !ans.skipped;
+
+            let badgeClass = 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+            if (isAnswered) {
+              badgeClass = ans.correct
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold'
+                : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 font-bold';
+            } else if (ans?.skipped) {
+              badgeClass = 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+            } else if (isMarked) {
+              badgeClass = 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 font-bold';
+            }
+
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  setCurrentIdx(i);
+                  setSelectedAnswer(answers[i]?.selected ?? null);
+                  setShowExplanation(!!answers[i]);
+                }}
+                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all relative ${
+                  isCurr ? 'ring-2 ring-blue-500 ring-offset-1 z-10 shadow-xs' : ''
+                } ${badgeClass}`}
+              >
+                {i + 1}
+                {isMarked && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-violet-600 rounded-full border-2 border-white dark:border-slate-800" />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* MCQ Card */}

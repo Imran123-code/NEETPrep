@@ -18,7 +18,7 @@ import {
   getAdaptiveNextQuestion,
   filterQuestions,
   getQuestionStats,
-} from './questions/index';
+} from './questions/index.js';
 
 export const mcqs = allQuestions;
 

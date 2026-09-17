@@ -1,10 +1,10 @@
 // Unified NEET Chapters Registry
 // Provides complete normalized chapter information and topic content across Physics, Chemistry, and Biology
 
-import { syllabus, subjectColors } from './syllabus';
-import { physicsChapters } from './physics';
-import { chemistryChapters } from './chemistry';
-import { biologyChapters } from './biology';
+import { syllabus, subjectColors } from './syllabus.js';
+import { physicsChapters } from './physics.js';
+import { chemistryChapters } from './chemistry.js';
+import { biologyChapters } from './biology.js';
 
 // Pre-compiled map of chapters with rich detailed notes
 const detailedChaptersMap = new Map();

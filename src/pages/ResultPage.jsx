@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle, Clock, Target, RotateCcw, BookOpen, ChevronDown, ChevronUp, Trophy, AlertTriangle, TrendingUp } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Target, RotateCcw, BookOpen, ChevronDown, ChevronUp, Trophy, AlertTriangle, TrendingUp, Zap } from 'lucide-react';
 import { CircularProgress } from '../components/ui/ProgressBar';
 import { subjectColors } from '../data/syllabus';
 import { useProgress } from '../context/ProgressContext';
@@ -127,12 +127,27 @@ export default function ResultPage() {
               </div>
             </div>
           )}
-          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/10 text-sm text-blue-700 dark:text-blue-300">
-            💡 <strong>Recommendation:</strong>{' '}
-            {weakTopics.length > 0
-              ? `Revise "${weakTopics[0]}" and solve 10 more MCQs on this topic.`
-              : 'Great performance! Try the full chapter test for more practice.'
-            }
+          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/10 text-sm text-blue-700 dark:text-blue-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              💡 <strong>Recommendation:</strong>{' '}
+              {weakTopics.length > 0
+                ? `Revise "${weakTopics[0]}" and solve practice MCQs on weak topics.`
+                : 'Great performance! Try the full chapter test for more practice.'
+              }
+            </div>
+            {weakTopics.length > 0 && (
+              <button
+                onClick={() => navigate('/random-practice', {
+                  state: {
+                    customTopics: weakTopics,
+                    title: `Weak Topics: ${chapterName}`
+                  }
+                })}
+                className="btn-primary py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                <Zap className="w-3.5 h-3.5 fill-current" /> Practice Weak Topics
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -205,6 +220,19 @@ export default function ResultPage() {
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-3 justify-center">
+        {weakTopics.length > 0 && (
+          <button
+            onClick={() => navigate('/random-practice', {
+              state: {
+                customTopics: weakTopics,
+                title: `Weak Topics Practice (${chapterName})`
+              }
+            })}
+            className="btn-primary flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            <Zap className="w-4 h-4 fill-current" /> Practice Weak Topics
+          </button>
+        )}
         <Link to={`/chapter/${result.chapterId}/test`} className="btn-primary flex items-center gap-2" style={{ background: colors.primary }}>
           <RotateCcw className="w-4 h-4" /> Retry Test
         </Link>

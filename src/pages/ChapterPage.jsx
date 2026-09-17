@@ -105,10 +105,10 @@ export default function ChapterPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Continue Learning', desc: 'Study topics with notes', icon: PlayCircle, to: `/chapter/${chapterId}/learn`, primary: true },
+              { label: 'Study Chapter', desc: 'Study structured notes', icon: PlayCircle, to: `/chapter/${chapterId}/learn`, primary: true },
               { label: 'Practice MCQs', desc: `${mcqs.length} questions available`, icon: Target, to: `/chapter/${chapterId}/mcqs`, primary: false },
-              { label: 'Chapter Test', desc: 'Timed exam mode', icon: FileText, to: `/chapter/${chapterId}/test`, primary: false },
-              { label: 'View Formulas', desc: 'Key formulas & concepts', icon: BookOpen, to: `/formulas`, primary: false },
+              { label: 'Chapter Test', desc: 'Timed chapter test', icon: FileText, to: `/chapter/${chapterId}/test`, primary: false },
+              { label: 'Quick Revision', desc: 'Formulas & high-yield points', icon: BookOpen, to: `/revision`, primary: false },
             ].map(action => (
               <Link key={action.label} to={action.to}
                 className={`flex flex-col items-center gap-2 p-5 rounded-2xl text-center transition-all duration-200 ${
