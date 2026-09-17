@@ -64,6 +64,7 @@ export default function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/about-neet" element={<AboutNEET />} />
                     <Route path="/syllabus" element={<Syllabus />} />
+                    <Route path="/neet-syllabus" element={<Syllabus />} />
                     <Route path="/subjects" element={<Subjects />} />
                     <Route path="/subject/:subject" element={<SubjectPage />} />
                     <Route path="/chapter/:chapterId" element={<ChapterPage />} />

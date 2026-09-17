@@ -51,13 +51,12 @@ export default function Navbar() {
 
   const navLinks = [
     { to: '/', label: 'Home', icon: Home },
-    { to: '/syllabus', label: 'Syllabus', icon: Library },
+    { to: '/neet-syllabus', label: 'NEET Syllabus', icon: Library },
     { to: '/subjects', label: 'Subjects', icon: BookOpen },
-    { to: '/mcqs', label: 'Question Bank', icon: BookOpen },
-    { to: '/mock-tests', label: 'Mock Tests', icon: Target },
-    { to: '/daily-question', label: 'Daily MCQ', icon: Zap },
-    { to: '/revision', label: 'Revision', icon: FlaskConical },
-    { to: '/about-neet', label: 'About NEET', icon: Dna },
+    { to: '/mcqs', label: 'MCQs', icon: Target },
+    { to: '/mock-tests', label: 'Mock Tests', icon: FlaskConical },
+    { to: '/revision', label: 'Revision', icon: Zap },
+    { to: '/progress', label: 'Progress', icon: BarChart2 },
   ];
 
   return (
