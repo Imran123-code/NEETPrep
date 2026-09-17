@@ -4,7 +4,7 @@ import { getChapterById } from '../data/chapters';
 import { subjectColors } from '../data/syllabus';
 import { useProgress } from '../context/ProgressContext';
 import { ProgressBar } from '../components/ui/ProgressBar';
-import { ChevronLeft, ChevronRight, CheckCircle, BookOpen, Lightbulb, AlertTriangle, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, BookOpen, Lightbulb, AlertTriangle, List, Video } from 'lucide-react';
 
 export default function LearnPage() {
   const { chapterId } = useParams();
@@ -90,8 +90,14 @@ export default function LearnPage() {
       <main className="flex-1 p-4 md:p-8 max-w-3xl">
         {/* Topic header */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+          <div className="flex items-center justify-between gap-2 text-xs text-slate-400 mb-2">
             <span>Topic {activeTopicIdx + 1} of {chapter.topics.length}</span>
+            <Link
+              to={`/videos?chapter=${chapter.id}&topic=${encodeURIComponent(topic.name)}&subject=${chapter.subject}&class=${chapter.class}`}
+              className="btn-sm btn-secondary py-1 px-2.5 text-xs inline-flex items-center gap-1.5 text-red-600 dark:text-red-400 hover:border-red-300"
+            >
+              <Video className="w-3.5 h-3.5" /> Watch Video
+            </Link>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold font-display text-slate-900 dark:text-white mb-2">{topic.name}</h1>
           {isCompleted && (

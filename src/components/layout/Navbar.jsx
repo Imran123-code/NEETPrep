@@ -6,7 +6,7 @@ import { useProgress } from '../../context/ProgressContext';
 import {
   Sun, Moon, Search, Menu, X, BookOpen, FlaskConical,
   Dna, BarChart2, Target, LogOut, User, ChevronDown,
-  Zap, Home, Library
+  Zap, Home, Library, Video
 } from 'lucide-react';
 import { mcqs } from '../../data/mcqs';
 import { syllabus } from '../../data/syllabus';
@@ -54,6 +54,7 @@ export default function Navbar() {
     { to: '/neet-syllabus', label: 'NEET Syllabus', icon: Library },
     { to: '/subjects', label: 'Subjects', icon: BookOpen },
     { to: '/mcqs', label: 'MCQs', icon: Target },
+    { to: '/videos', label: 'Videos', icon: Video },
     { to: '/mock-tests', label: 'Mock Tests', icon: FlaskConical },
     { to: '/revision', label: 'Revision', icon: Zap },
     { to: '/progress', label: 'Progress', icon: BarChart2 },
@@ -194,6 +195,9 @@ export default function Navbar() {
                     </Link>
                     <Link to="/progress" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                       <Target className="w-4 h-4" /> Progress
+                    </Link>
+                    <Link to="/video-bookmarks" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                      <Video className="w-4 h-4" /> Saved Videos
                     </Link>
                     <hr className="my-1 border-slate-100 dark:border-slate-700" />
                     <button onClick={() => { logout(); setProfileOpen(false); navigate('/'); }} className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 w-full transition-colors">

@@ -3,13 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 import { ProgressBar, CircularProgress } from '../components/ui/ProgressBar';
-import { physicsChapters } from '../data/physics';
-import { chemistryChapters } from '../data/chemistry';
-import { biologyChapters } from '../data/biology';
+import { allChapters } from '../data/chapters';
 import { subjectColors } from '../data/syllabus';
-import { Target, BookOpen, Zap, Flame, Trophy, Clock, ArrowRight, CheckCircle, Circle } from 'lucide-react';
-
-const allChapters = [...physicsChapters, ...chemistryChapters, ...biologyChapters];
+import { Target, BookOpen, Zap, Flame, Trophy, Clock, ArrowRight, CheckCircle, Circle, Video, Play } from 'lucide-react';
 const subjects = ['Physics', 'Chemistry', 'Biology'];
 
 const badges = {
@@ -25,12 +21,13 @@ const subjectMarks = { Physics: 180, Chemistry: 180, Biology: 360 };
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { progress, getSubjectStats, getOverallStats } = useProgress();
+  const { progress, getSubjectStats, getOverallStats, watchHistory } = useProgress();
   const stats = getOverallStats();
   const today = new Date().toLocaleDateString();
 
   const recentTests = progress.testResults.slice(0, 5);
-  const lastChapter = allChapters.find(c => progress.topicsCompleted[c.id]?.length > 0);
+  const lastChapter = allChapters.find(c => progress.topicsCompleted[c.id]?.length > 0) || allChapters[0];
+  const lastWatched = watchHistory?.[0] || null;
 
   const getHour = () => new Date().getHours();
   const greeting = getHour() < 12 ? 'Good Morning' : getHour() < 17 ? 'Good Afternoon' : 'Good Evening';
@@ -71,41 +68,104 @@ export default function Dashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left: Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Continue Learning */}
+          {/* Continue Learning Hub */}
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-slate-900 dark:text-white">Continue Learning</h2>
-              <Link to="/syllabus" className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">View All</Link>
+              <Link to="/syllabus" className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">View Syllabus</Link>
             </div>
-            {lastChapter ? (
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-900/10 dark:to-violet-900/10 border border-blue-100 dark:border-blue-800">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-white dark:bg-slate-800 shadow-sm">
-                  {lastChapter.subject === 'Physics' ? '⚛️' : lastChapter.subject === 'Chemistry' ? '🧪' : '🧬'}
+
+            <div className="space-y-3">
+              {/* 1. Continue Chapter */}
+              {lastChapter && (
+                <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/70">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-white dark:bg-slate-800 shadow-2xs shrink-0">
+                    📚
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-semibold text-slate-400">Continue Chapter</div>
+                    <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">{lastChapter.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <ProgressBar
+                        value={Math.round(((progress.topicsCompleted[lastChapter.id]?.length || 0) / (lastChapter.topics?.length || 1)) * 100)}
+                        color={subjectBarColors[lastChapter.subject]}
+                        className="flex-1 h-1.5"
+                      />
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        {Math.round(((progress.topicsCompleted[lastChapter.id]?.length || 0) / (lastChapter.topics?.length || 1)) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    to={`/chapter/${lastChapter.id}/learn`}
+                    className="btn-primary btn-sm text-xs shrink-0"
+                    style={{ background: subjectColors[lastChapter.subject]?.primary }}
+                  >
+                    Study Notes
+                  </Link>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-500 mb-0.5">{lastChapter.subject}</p>
-                  <h3 className="font-semibold text-slate-900 dark:text-white truncate">{lastChapter.name}</h3>
-                  <div className="flex items-center gap-2 mt-2">
-                    <ProgressBar
-                      value={Math.round((progress.topicsCompleted[lastChapter.id]?.length || 0) / lastChapter.topics.length * 100)}
-                      color={subjectBarColors[lastChapter.subject]}
-                      className="flex-1 h-1.5"
+              )}
+
+              {/* 2. Continue Watching */}
+              {lastWatched ? (
+                <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-red-50/40 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40">
+                  <div className="relative w-14 h-10 rounded-lg bg-black overflow-hidden shrink-0">
+                    <img
+                      src={`https://img.youtube.com/vi/${lastWatched.youtubeId}/hqdefault.jpg`}
+                      alt={lastWatched.title}
+                      className="w-full h-full object-cover"
                     />
-                    <span className="text-xs font-semibold text-slate-500">
-                      {Math.round((progress.topicsCompleted[lastChapter.id]?.length || 0) / lastChapter.topics.length * 100)}%
-                    </span>
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <Play className="w-3.5 h-3.5 text-white fill-current" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-semibold text-red-600 dark:text-red-400">Continue Watching</div>
+                    <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">{lastWatched.title}</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{lastWatched.chapterName || lastWatched.subject}</p>
+                  </div>
+                  <Link
+                    to={`/videos/${lastWatched.id}`}
+                    className="btn-primary btn-sm text-xs shrink-0 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Resume Video
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/70">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-red-50 dark:bg-red-950/40 text-red-500 shrink-0">
+                      🎥
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-semibold text-slate-400">Video Lectures</div>
+                      <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">Watch NEET concept videos & one-shots</div>
+                    </div>
+                  </div>
+                  <Link to="/videos" className="btn-secondary btn-sm text-xs">
+                    Browse Videos
+                  </Link>
+                </div>
+              )}
+
+              {/* 3. Continue MCQs */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/70">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-blue-50 dark:bg-blue-950/40 text-blue-500 shrink-0">
+                    📝
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-slate-400">Continue MCQs</div>
+                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      {stats.totalAttempts > 0 ? `${stats.totalAttempts} questions attempted · Practice more` : 'Solve high-yield chapter MCQs'}
+                    </div>
                   </div>
                 </div>
-                <Link to={`/chapter/${lastChapter.id}/learn`} className="btn-primary btn-sm whitespace-nowrap" style={{ background: subjectColors[lastChapter.subject].primary }}>
-                  Continue
+                <Link to="/mcqs" className="btn-primary btn-sm text-xs">
+                  Practice MCQs
                 </Link>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-slate-400 text-sm mb-3">No chapters started yet</p>
-                <Link to="/subjects" className="btn-primary btn-sm">Start Learning</Link>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Subject Progress */}

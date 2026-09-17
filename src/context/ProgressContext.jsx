@@ -11,6 +11,8 @@ const defaultProgress = {
   mistakes: [], // Array of question IDs where the user answered incorrectly
   testResults: [],
   bookmarks: [],
+  videoBookmarks: [],
+  watchHistory: [],
   streak: { count: 0, lastDate: null },
   xp: 0,
   badges: [],
@@ -156,6 +158,47 @@ export const ProgressProvider = ({ children }) => {
     });
   }, [save]);
 
+  const toggleVideoBookmark = useCallback((videoId) => {
+    setProgress(prev => {
+      const current = prev.videoBookmarks || [];
+      const exists = current.includes(videoId);
+      const updated = {
+        ...prev,
+        videoBookmarks: exists ? current.filter(b => b !== videoId) : [...current, videoId],
+      };
+      save(updated);
+      addToast(exists ? 'Video removed from bookmarks' : '🎥 Video saved to bookmarks!', exists ? 'info' : 'success');
+      return updated;
+    });
+  }, [save]);
+
+  const recordVideoWatch = useCallback((video) => {
+    if (!video || !video.id) return;
+    setProgress(prev => {
+      const currentHistory = prev.watchHistory || [];
+      const filtered = currentHistory.filter(item => item.id !== video.id && item.youtubeId !== video.youtubeId);
+      const entry = {
+        id: video.id,
+        youtubeId: video.youtubeId,
+        title: video.title,
+        channel: video.channel,
+        subject: video.subject,
+        class: video.class,
+        chapterId: video.chapterId,
+        chapterName: video.chapterName,
+        topic: video.topic,
+        duration: video.duration,
+        watchedAt: new Date().toISOString(),
+      };
+      const updated = {
+        ...prev,
+        watchHistory: [entry, ...filtered].slice(0, 25),
+      };
+      save(updated);
+      return updated;
+    });
+  }, [save]);
+
   const updateStreak = useCallback(() => {
     const today = new Date().toDateString();
     setProgress(prev => {
@@ -261,6 +304,10 @@ export const ProgressProvider = ({ children }) => {
       completeTopic, saveTestResult, recordMCQAttempt, clearMistake,
       toggleBookmark, updateStreak, saveDailyChallenge, updatePlannerTask,
       getChapterProgress, getSubjectStats, getOverallStats, getWeakTopics, addToast,
+      videoBookmarks: progress.videoBookmarks || [],
+      toggleVideoBookmark,
+      watchHistory: progress.watchHistory || [],
+      recordVideoWatch,
     }}>
       {children}
     </ProgressContext.Provider>

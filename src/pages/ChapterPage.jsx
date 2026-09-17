@@ -5,7 +5,8 @@ import { subjectColors } from '../data/syllabus';
 import { getMCQsByChapter } from '../data/mcqs';
 import { useProgress } from '../context/ProgressContext';
 import { ProgressBar, CircularProgress } from '../components/ui/ProgressBar';
-import { BookOpen, Clock, Target, FileText, ChevronRight, PlayCircle, CheckCircle, AlertCircle } from 'lucide-react';
+import { BookOpen, Clock, Target, FileText, ChevronRight, PlayCircle, CheckCircle, AlertCircle, Video } from 'lucide-react';
+import { getVideosByChapter } from '../data/videos';
 
 export default function ChapterPage() {
   const { chapterId } = useParams();
@@ -13,6 +14,7 @@ export default function ChapterPage() {
   const { getChapterProgress, progress } = useProgress();
 
   const chapterData = getChapterById(chapterId);
+  const chapterVideos = getVideosByChapter(chapterId);
 
   if (!chapterData) {
     return (
@@ -103,25 +105,26 @@ export default function ChapterPage() {
 
         {/* Action Cards */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
             {[
-              { label: 'Study Chapter', desc: 'Study structured notes', icon: PlayCircle, to: `/chapter/${chapterId}/learn`, primary: true },
-              { label: 'Practice MCQs', desc: `${mcqs.length} questions available`, icon: Target, to: `/chapter/${chapterId}/mcqs`, primary: false },
-              { label: 'Chapter Test', desc: 'Timed chapter test', icon: FileText, to: `/chapter/${chapterId}/test`, primary: false },
-              { label: 'Quick Revision', desc: 'Formulas & high-yield points', icon: BookOpen, to: `/revision`, primary: false },
+              { label: 'Study Chapter', desc: 'Structured notes', icon: PlayCircle, to: `/chapter/${chapterId}/learn`, primary: true },
+              { label: 'Watch Videos', desc: 'Concept lectures', icon: Video, to: `/videos?chapter=${chapterId}&subject=${chapterData.subject}&class=${chapterData.class}`, primary: false },
+              { label: 'Practice MCQs', desc: `${mcqs.length} MCQs`, icon: Target, to: `/chapter/${chapterId}/mcqs`, primary: false },
+              { label: 'Chapter Test', desc: 'Timed test', icon: FileText, to: `/chapter/${chapterId}/test`, primary: false },
+              { label: 'Quick Revision', desc: 'Key formulas', icon: BookOpen, to: `/revision`, primary: false },
             ].map(action => (
               <Link key={action.label} to={action.to}
-                className={`flex flex-col items-center gap-2 p-5 rounded-2xl text-center transition-all duration-200 ${
+                className={`flex flex-col items-center gap-2 p-4 rounded-2xl text-center transition-all duration-200 ${
                   action.primary
                     ? 'text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'
                     : 'card hover:shadow-md hover:-translate-y-0.5'
                 }`}
                 style={action.primary ? { background: colors.primary } : {}}
               >
-                <action.icon className={`w-7 h-7 ${action.primary ? 'text-white' : ''}`} style={!action.primary ? { color: colors.primary } : {}} />
+                <action.icon className={`w-6 h-6 ${action.primary ? 'text-white' : ''}`} style={!action.primary ? { color: colors.primary } : {}} />
                 <div>
-                  <div className={`font-semibold text-sm ${action.primary ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{action.label}</div>
-                  <div className={`text-xs mt-0.5 ${action.primary ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'}`}>{action.desc}</div>
+                  <div className={`font-semibold text-xs sm:text-sm ${action.primary ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{action.label}</div>
+                  <div className={`text-[11px] mt-0.5 ${action.primary ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'}`}>{action.desc}</div>
                 </div>
               </Link>
             ))}
@@ -176,6 +179,69 @@ export default function ChapterPage() {
             </Link>
           </div>
         )}
+
+        {/* Chapter Video Lectures */}
+        <div className="card p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold font-display text-slate-900 dark:text-white flex items-center gap-2">
+                <Video className="w-5 h-5 text-red-500" />
+                <span>Video Lectures for {chapterData.name}</span>
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Master this chapter through concept explanations and high-yield video lectures
+              </p>
+            </div>
+            <Link
+              to={`/videos?chapter=${chapterId}&subject=${chapterData.subject}&class=${chapterData.class}`}
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+            >
+              View All ({chapterVideos.length > 0 ? chapterVideos.length : 'Search'}) →
+            </Link>
+          </div>
+
+          {chapterVideos.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {chapterVideos.slice(0, 3).map(v => (
+                <Link
+                  key={v.id}
+                  to={`/videos/${v.id}`}
+                  className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-blue-400 dark:hover:border-blue-500 transition-all flex items-center gap-3 group"
+                >
+                  <div className="relative w-16 h-12 rounded-lg bg-black overflow-hidden shrink-0">
+                    <img
+                      src={`https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`}
+                      alt={v.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <PlayCircle className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      {v.title}
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">{v.channel}</div>
+                    <div className="text-[10px] font-semibold text-blue-500">{v.videoType} · {v.duration}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-xs text-slate-600 dark:text-slate-300">
+                Explore recommended video lectures, one-shots, and NCERT breakdowns for {chapterData.name}.
+              </span>
+              <Link
+                to={`/videos?chapter=${chapterId}&subject=${chapterData.subject}&class=${chapterData.class}`}
+                className="btn-primary py-1.5 px-3 text-xs shrink-0 inline-flex items-center gap-1.5"
+              >
+                <Video className="w-3.5 h-3.5" /> Find Chapter Videos
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Key formulas preview */}
         {chapterData?.formulas && chapterData.formulas.length > 0 && (

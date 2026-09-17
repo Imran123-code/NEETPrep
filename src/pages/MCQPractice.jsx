@@ -5,7 +5,7 @@ import { subjectColors } from '../data/syllabus';
 import { getChapterById } from '../data/chapters';
 import { useProgress } from '../context/ProgressContext';
 import { ProgressBar } from '../components/ui/ProgressBar';
-import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, CheckCircle, XCircle, Flag, SkipForward, Clock, CheckSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, CheckCircle, XCircle, Flag, SkipForward, Clock, CheckSquare, Video } from 'lucide-react';
 
 const diffColors = { Easy: 'badge-easy', Medium: 'badge-medium', Hard: 'badge-hard' };
 
@@ -307,6 +307,20 @@ export default function MCQPractice() {
               }
             </div>
             <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{q.explanation}</p>
+            {selectedAnswer !== q.correctAnswer && (
+              <div className="mt-3 pt-3 border-t border-blue-200/70 dark:border-blue-800/60 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                  Need help with this concept?
+                </span>
+                <Link
+                  to={`/videos?chapter=${q.chapterId}&topic=${encodeURIComponent(q.topic || '')}&subject=${q.subject}&class=${q.class}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-xs"
+                >
+                  <Video className="w-3.5 h-3.5" /> Watch Related Video
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>

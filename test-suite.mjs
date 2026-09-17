@@ -101,6 +101,37 @@ console.log('\n--- 5. UI Subject Constants ---');
 assert(Boolean(subjectColors.Physics && subjectColors.Chemistry && subjectColors.Biology), 'Subject colors defined for Physics, Chemistry, Biology');
 assert(Boolean(subjectIcons.Physics && subjectIcons.Chemistry && subjectIcons.Biology), 'Subject icons defined for Physics, Chemistry, Biology');
 
+// 7. Video Learning Registry Verification
+console.log('\n--- 6. Video Learning Registry Verification ---');
+const { neetVideos, getAllVideos, getVideoById, getVideosBySubject, getVideosByClass, getVideosByChapter } = await import('./src/data/videos.js');
+
+assert(Array.isArray(neetVideos) && neetVideos.length >= 20, `Curated video library loaded (${neetVideos.length} videos)`);
+
+let allVideosValid = true;
+neetVideos.forEach((v, idx) => {
+  if (!v.id || !v.title || !v.youtubeId || !v.subject || !v.class || !v.channel || !v.videoType) {
+    allVideosValid = false;
+    console.error(`Invalid video schema at index ${idx}:`, v);
+  }
+});
+assert(allVideosValid, 'All video entries have valid ID, title, youtubeId, subject, class, channel, and videoType');
+
+const phyVideos = getVideosBySubject('Physics');
+const chemVideos = getVideosBySubject('Chemistry');
+const bioVideos = getVideosBySubject('Biology');
+assert(phyVideos.length > 0, `Physics video lectures indexed: ${phyVideos.length}`);
+assert(chemVideos.length > 0, `Chemistry video lectures indexed: ${chemVideos.length}`);
+assert(bioVideos.length > 0, `Biology video lectures indexed: ${bioVideos.length}`);
+
+const class11Videos = getVideosByClass(11);
+const class12Videos = getVideosByClass(12);
+assert(class11Videos.length > 0, `Class 11 video lectures indexed: ${class11Videos.length}`);
+assert(class12Videos.length > 0, `Class 12 video lectures indexed: ${class12Videos.length}`);
+
+const sampleVideo = neetVideos[0];
+const lookupVid = getVideoById(sampleVideo.id);
+assert(lookupVid && lookupVid.id === sampleVideo.id, `Video lookup by ID working for ${sampleVideo.id}`);
+
 console.log(`\n========================================`);
 console.log(`Test Results: ${passed} Passed, ${failed} Failed`);
 console.log(`========================================`);

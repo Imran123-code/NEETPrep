@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle, Clock, Target, RotateCcw, BookOpen, ChevronDown, ChevronUp, Trophy, AlertTriangle, TrendingUp, Zap } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Target, RotateCcw, BookOpen, ChevronDown, ChevronUp, Trophy, AlertTriangle, TrendingUp, Zap, Video } from 'lucide-react';
 import { CircularProgress } from '../components/ui/ProgressBar';
 import { subjectColors } from '../data/syllabus';
 import { useProgress } from '../context/ProgressContext';
@@ -119,10 +119,20 @@ export default function ResultPage() {
           )}
           {weakTopics.length > 0 && (
             <div className="mb-4">
-              <div className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2">⚠ Needs Improvement</div>
-              <div className="flex flex-wrap gap-2">
+              <div className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2">⚠ Needs Improvement — Recommended Video Lectures</div>
+              <div className="space-y-2">
                 {weakTopics.map(t => (
-                  <span key={t} className="badge bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">{t}</span>
+                  <div key={t} className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-red-50/70 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 gap-2">
+                    <span className="font-medium text-xs text-red-800 dark:text-red-300">
+                      {t}
+                    </span>
+                    <Link
+                      to={`/videos?chapter=${result.chapterId}&topic=${encodeURIComponent(t)}&subject=${subject}`}
+                      className="btn-sm btn-secondary py-1 px-2.5 text-xs inline-flex items-center gap-1.5 text-red-600 dark:text-red-400 self-start sm:self-auto hover:border-red-300"
+                    >
+                      <Video className="w-3.5 h-3.5" /> Watch Video Lectures
+                    </Link>
+                  </div>
                 ))}
               </div>
             </div>

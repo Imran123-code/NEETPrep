@@ -20,6 +20,9 @@ const MCQPractice = lazy(() => import('./pages/MCQPractice'));
 const ChapterTest = lazy(() => import('./pages/ChapterTest'));
 const ResultPage = lazy(() => import('./pages/ResultPage'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
+const VideoLearning = lazy(() => import('./pages/VideoLearning'));
+const WatchVideo = lazy(() => import('./pages/WatchVideo'));
+const VideoBookmarks = lazy(() => import('./pages/VideoBookmarks'));
 const Bookmarks = lazy(() => import('./pages/Bookmarks'));
 const Revision = lazy(() => import('./pages/Revision'));
 const Formulas = lazy(() => import('./pages/Formulas'));
@@ -74,6 +77,9 @@ export default function App() {
                     <Route path="/result/:id" element={<ResultPage />} />
                     <Route path="/mcqs" element={<QuestionBank />} />
                     <Route path="/question-bank" element={<QuestionBank />} />
+                    <Route path="/videos" element={<VideoLearning />} />
+                    <Route path="/videos/:videoId" element={<WatchVideo />} />
+                    <Route path="/video-bookmarks" element={<VideoBookmarks />} />
                     <Route path="/bookmarks" element={<Bookmarks />} />
                     <Route path="/mistakes" element={<Mistakes />} />
                     <Route path="/my-mistakes" element={<Mistakes />} />
