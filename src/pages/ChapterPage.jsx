@@ -5,7 +5,7 @@ import { subjectColors } from '../data/syllabus';
 import { getMCQsByChapter } from '../data/mcqs';
 import { useProgress } from '../context/ProgressContext';
 import { ProgressBar, CircularProgress } from '../components/ui/ProgressBar';
-import { BookOpen, Clock, Target, FileText, ChevronRight, PlayCircle, CheckCircle, AlertCircle, Video } from 'lucide-react';
+import { BookOpen, Clock, Target, FileText, ChevronRight, PlayCircle, CheckCircle, AlertCircle, Video, Zap, Shuffle } from 'lucide-react';
 import { getVideosByChapter } from '../data/videos';
 
 export default function ChapterPage() {
@@ -35,6 +35,16 @@ export default function ChapterPage() {
 
   const testResults = (progress.testResults || []).filter(r => r.chapterId === chapterId);
   const bestScore = testResults.length ? Math.max(...testResults.map(r => r.percentage)) : null;
+  const lastAttempt = testResults[0] || null;
+
+  // Quiz count options — cap to available question count
+  const quizOptions = [
+    { label: '10 Q', count: 10, desc: 'Quick drill', icon: '⚡' },
+    { label: '25 Q', count: 25, desc: 'Standard', icon: '📝' },
+    { label: '50 Q', count: 50, desc: 'In-depth', icon: '🎯' },
+    { label: '100 Q', count: 100, desc: 'Full set', icon: '🏆' },
+    { label: 'Random', count: 'random', desc: 'Surprise!', icon: '🔀' },
+  ].filter(opt => opt.count === 'random' || opt.count === 100 || opt.count <= mcqs.length);
 
   return (
     <div className="page-enter">
@@ -103,57 +113,140 @@ export default function ChapterPage() {
         </div>
       </div>
 
-        {/* Action Cards */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
-            {[
-              { label: 'Study Chapter', desc: 'Structured notes', icon: PlayCircle, to: `/chapter/${chapterId}/learn`, primary: true },
-              { label: 'Watch Videos', desc: 'Concept lectures', icon: Video, to: `/videos?chapter=${chapterId}&subject=${chapterData.subject}&class=${chapterData.class}`, primary: false },
-              { label: 'Practice MCQs', desc: `${mcqs.length} MCQs`, icon: Target, to: `/chapter/${chapterId}/mcqs`, primary: false },
-              { label: 'Chapter Test', desc: 'Timed test', icon: FileText, to: `/chapter/${chapterId}/test`, primary: false },
-              { label: 'Quick Revision', desc: 'Key formulas', icon: BookOpen, to: `/revision`, primary: false },
-            ].map(action => (
-              <Link key={action.label} to={action.to}
-                className={`flex flex-col items-center gap-2 p-4 rounded-2xl text-center transition-all duration-200 ${
-                  action.primary
-                    ? 'text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'
-                    : 'card hover:shadow-md hover:-translate-y-0.5'
-                }`}
-                style={action.primary ? { background: colors.primary } : {}}
-              >
-                <action.icon className={`w-6 h-6 ${action.primary ? 'text-white' : ''}`} style={!action.primary ? { color: colors.primary } : {}} />
-                <div>
-                  <div className={`font-semibold text-xs sm:text-sm ${action.primary ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{action.label}</div>
-                  <div className={`text-[11px] mt-0.5 ${action.primary ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'}`}>{action.desc}</div>
+      {/* Action Cards */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          {[
+            { label: 'Study Chapter', desc: 'Structured notes', icon: PlayCircle, to: `/chapter/${chapterId}/learn`, primary: true },
+            { label: 'Watch Videos', desc: 'Concept lectures', icon: Video, to: `/videos?chapter=${chapterId}&subject=${chapterData.subject}&class=${chapterData.class}`, primary: false },
+            { label: 'Practice MCQs', desc: `${mcqs.length} MCQs`, icon: Target, to: `/chapter/${chapterId}/mcqs`, primary: false },
+            { label: 'Quick Revision', desc: 'Key formulas', icon: BookOpen, to: `/revision`, primary: false },
+          ].map(action => (
+            <Link key={action.label} to={action.to}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl text-center transition-all duration-200 ${
+                action.primary
+                  ? 'text-white shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                  : 'card hover:shadow-md hover:-translate-y-0.5'
+              }`}
+              style={action.primary ? { background: colors.primary } : {}}
+            >
+              <action.icon className={`w-6 h-6 ${action.primary ? 'text-white' : ''}`} style={!action.primary ? { color: colors.primary } : {}} />
+              <div>
+                <div className={`font-semibold text-xs sm:text-sm ${action.primary ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{action.label}</div>
+                <div className={`text-[11px] mt-0.5 ${action.primary ? 'text-white/70' : 'text-slate-500 dark:text-slate-400'}`}>{action.desc}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* ========================================
+            CHAPTER QUIZ — MAIN INTERACTIVE SECTION
+            ======================================== */}
+        {mcqs.length > 0 && (
+          <div className="card p-6 mb-8 border-2" style={{ borderColor: `${colors.primary}40`, background: `${colors.primary}04` }}>
+            {/* Header row */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <h2 className="text-lg font-bold font-display text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>🎯</span> Chapter Quiz
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {mcqs.length} NEET-level questions · NEET scoring (+4/−1) · Full review after submission
+                </p>
+              </div>
+              {/* Best score badge */}
+              {bestScore !== null ? (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  <div>
+                    <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Best Score</div>
+                    <div className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{bestScore}%</div>
+                  </div>
                 </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 shrink-0">
+                  <AlertCircle className="w-4 h-4 text-amber-500" />
+                  <div className="text-xs text-amber-700 dark:text-amber-400 font-semibold">Not attempted yet</div>
+                </div>
+              )}
+            </div>
+
+            {/* Quiz size picker */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mb-4">
+              {[
+                { label: '10 Questions', count: 10, desc: 'Quick drill · ~10 min', icon: '⚡', available: mcqs.length >= 10 },
+                { label: '25 Questions', count: 25, desc: 'Standard · ~25 min', icon: '📝', available: mcqs.length >= 25 },
+                { label: '50 Questions', count: 50, desc: 'In-depth · ~50 min', icon: '🎯', available: mcqs.length >= 50 },
+                { label: '100 Questions', count: 100, desc: 'Full test · ~100 min', icon: '🏆', available: mcqs.length >= 100 },
+                { label: 'Random Mix', count: 'random', desc: 'Shuffled selection', icon: '🔀', available: true },
+              ].map(opt => (
+                opt.available ? (
+                  <Link
+                    key={opt.label}
+                    to={`/chapter/${chapterId}/test?count=${opt.count}&mode=quiz`}
+                    className="group flex flex-col items-center gap-1.5 p-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md hover:-translate-y-0.5 transition-all text-center"
+                  >
+                    <span className="text-xl">{opt.icon}</span>
+                    <div className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-tight">
+                      {opt.label}
+                    </div>
+                    <div className="text-[11px] text-slate-400 leading-tight">{opt.desc}</div>
+                  </Link>
+                ) : (
+                  <div
+                    key={opt.label}
+                    className="flex flex-col items-center gap-1.5 p-3.5 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 text-center opacity-40 cursor-not-allowed"
+                  >
+                    <span className="text-xl grayscale">{opt.icon}</span>
+                    <div className="font-bold text-sm text-slate-500 leading-tight">{opt.label}</div>
+                    <div className="text-[11px] text-slate-400 leading-tight">Not enough Qs</div>
+                  </div>
+                )
+              ))}
+            </div>
+
+            {/* Last attempt row */}
+            {lastAttempt && (
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+                <span>
+                  Last attempt: <span className="font-semibold text-slate-700 dark:text-slate-200">{lastAttempt.score}/{lastAttempt.total}</span>
+                  {' '}({lastAttempt.percentage}%) · {new Date(lastAttempt.date).toLocaleDateString('en-IN')}
+                </span>
+                <Link
+                  to={`/chapter/${chapterId}/test?count=all&mode=quiz`}
+                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Try all {mcqs.length} →
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Quick Practice Mode Presets (instant feedback mode) */}
+        <div className="card p-6 mb-8">
+          <h2 className="text-base font-bold font-display text-slate-900 dark:text-white mb-3 flex items-center justify-between">
+            <span>⚡ Quick Practice (with instant feedback)</span>
+            <span className="text-xs text-slate-400 font-normal">{mcqs.length} questions available</span>
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Practice 10', count: 10, desc: 'Quick 10 questions' },
+              { label: 'Practice 25', count: 25, desc: 'Standard practice' },
+              { label: 'Practice 50', count: 50, desc: 'In-depth drill' },
+              { label: 'Practice All', count: 'all', desc: 'All chapter questions' },
+            ].map(opt => (
+              <Link
+                key={opt.label}
+                to={`/chapter/${chapterId}/mcqs?count=${opt.count}`}
+                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all text-center group"
+              >
+                <div className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">{opt.label}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
               </Link>
             ))}
           </div>
-
-          {/* Quick Practice Mode Presets */}
-          <div className="card p-6 mb-8">
-            <h2 className="text-base font-bold font-display text-slate-900 dark:text-white mb-3 flex items-center justify-between">
-              <span>⚡ Quick MCQ Practice Modes</span>
-              <span className="text-xs text-slate-400 font-normal">{mcqs.length} questions available</span>
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: 'Practice 10', count: 10, desc: 'Quick 10 questions' },
-                { label: 'Practice 25', count: 25, desc: 'Standard practice' },
-                { label: 'Practice 50', count: 50, desc: 'In-depth drill' },
-                { label: 'Practice All', count: 'all', desc: 'All chapter questions' },
-              ].map(opt => (
-                <Link
-                  key={opt.label}
-                  to={`/chapter/${chapterId}/mcqs?count=${opt.count}`}
-                  className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all text-center group"
-                >
-                  <div className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">{opt.label}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
-                </Link>
-              ))}
-            </div>
-          </div>
+        </div>
 
         {/* Topics list */}
         {chapterData?.topics && Array.isArray(chapterData.topics) && chapterData.topics.length > 0 && (

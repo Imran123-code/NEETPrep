@@ -6,6 +6,7 @@ import { physicsClass12Questions } from './physics/class12.js';
 import { chemistryClass11Questions } from './chemistry/class11.js';
 import { chemistryClass12Questions } from './chemistry/class12.js';
 import { biologyClass11Questions } from './biology/class11.js';
+import { biologyClass11Ch2Questions } from './biology/class11-ch2-biological-classification.js';
 import { biologyClass12Questions } from './biology/class12.js';
 
 // Duplicate detection and normalization utility
@@ -20,6 +21,7 @@ const rawAllQuestions = [
   ...chemistryClass11Questions,
   ...chemistryClass12Questions,
   ...biologyClass11Questions,
+  ...biologyClass11Ch2Questions,
   ...biologyClass12Questions,
 ];
 
