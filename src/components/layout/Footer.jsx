@@ -85,6 +85,14 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Warm dedication */}
+        <div className="pt-4 pb-6 text-center">
+          <p className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-50/80 via-purple-50/80 to-blue-50/80 dark:from-rose-950/20 dark:via-purple-950/20 dark:to-blue-950/20 border border-rose-100/80 dark:border-rose-900/30 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm backdrop-blur-sm transition-all hover:scale-[1.01]">
+            <span>Made with <span className="text-rose-500 inline-block animate-pulse">❤️</span> by <span className="font-semibold text-slate-900 dark:text-white">Imran</span>, especially for your dreams.</span>
+            <span className="text-base">✨</span>
+          </p>
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
           <p className="text-xs text-slate-400">
             © {new Date().getFullYear()} NEETPrep. For educational purposes. Based on NCERT syllabus.
